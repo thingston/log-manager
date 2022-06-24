@@ -103,4 +103,20 @@ final class LogManagerTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $manager->getLogger('logger1');
     }
+
+    public function testLogManagerIsLogger(): void
+    {
+        $manager = new LogManager();
+
+        $manager->alert('Some alert');
+        $manager->critical('Some critical');
+        $manager->debug('Some debug');
+        $manager->emergency('Some emergency');
+        $manager->error('Some error');
+        $manager->info('Some info');
+        $manager->notice('Some notice');
+        $manager->warning('Some warning');
+
+        $this->assertInstanceOf(LoggerInterface::class, $manager);
+    }
 }
