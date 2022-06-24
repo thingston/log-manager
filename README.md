@@ -1,6 +1,6 @@
 # Thingston Log Manager
 
-Flexible configured log pools for PHP applications implementing PSR-3.
+Flexible configured loggers for PHP applications implementing PSR-3.
 
 ## Requirements
 

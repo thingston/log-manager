@@ -1,6 +1,6 @@
 {
     "name": "thingston/log-manager",
-    "description": "Flexible configured log pools for PHP applications implementing PSR-3.",
+    "description": "Flexible configured loggers for PHP applications implementing PSR-3.",
     "keywords": ["php", "log", "psr-3"],
     "homepage": "https://github.com/thingston/log-manager",
     "type": "library",
