@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thingston\Log;
 
+use Monolog\Handler\NullHandler;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Psr\Log\LogLevel;
 use Thingston\Settings\AbstractSettings;
@@ -14,20 +16,28 @@ final class LogSettings extends AbstractSettings
     public const HANDLER = 'handler';
     public const ARGUMENTS = 'arguments';
 
-    public function __construct()
+    public const LOG_STACK = 'stack';
+    public const LOG_STREAM = 'stream';
+    public const LOG_NULL = 'null';
+    public const LOG_ROTATING = 'rotating';
+
+    /**
+     * @param array<string, array<mixed>|scalar|\Thingston\Settings\SettingsInterface> $settings
+     */
+    public function __construct(array $settings = [])
     {
-        parent::__construct([
+        parent::__construct(array_merge([
             self::DEFAULT => 'stream',
-            'stack' => ['stream'],
-            'null' => [
+            self::LOG_STACK => [self::LOG_STREAM],
+            self::LOG_NULL => [
                 [
-                    self::HANDLER => \Monolog\Handler\NullHandler::class,
+                    self::HANDLER => NullHandler::class,
                     self::ARGUMENTS => [
                         'level' => LogLevel::DEBUG,
                     ],
                 ],
             ],
-            'stream' => [
+            self::LOG_STREAM => [
                 [
                     self::HANDLER => StreamHandler::class,
                     self::ARGUMENTS => [
@@ -36,9 +46,9 @@ final class LogSettings extends AbstractSettings
                     ],
                 ],
             ],
-            'rotating' => [
+            self::LOG_ROTATING => [
                 [
-                    self::HANDLER => \Monolog\Handler\RotatingFileHandler::class,
+                    self::HANDLER => RotatingFileHandler::class,
                     self::ARGUMENTS => [
                         'filename' => sys_get_temp_dir() . '/thingston.log',
                         'maxFiles' => 7,
@@ -46,6 +56,6 @@ final class LogSettings extends AbstractSettings
                     ],
                 ],
             ],
-        ]);
+        ], $settings));
     }
 }

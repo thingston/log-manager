@@ -12,7 +12,7 @@ use Stringable;
 use Thingston\Log\Exception\InvalidArgumentException;
 use Thingston\Settings\SettingsInterface;
 
-class LogManager implements LogManagerInterface
+final class LogManager implements LogManagerInterface
 {
     /**
      * @var array<string, LoggerInterface>
