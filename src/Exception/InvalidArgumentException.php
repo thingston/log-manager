@@ -18,13 +18,13 @@ class InvalidArgumentException extends \InvalidArgumentException implements LogE
         return new self(sprintf('Invalid config type "%s" for logger "%s".', $type, $name));
     }
 
-    public static function forMissingHandlerClass(): self
+    public static function forMissingAdapterClass(): self
     {
-        return new self('Missing handler class in config.');
+        return new self('Missing adapter class in config.');
     }
 
-    public static function forInvalidHandlerClass(): self
+    public static function forInvalidAdapterClass(): self
     {
-        return new self(sprintf('Handler class is not an instance of "%s".', HandlerInterface::class));
+        return new self(sprintf('Adapter class is not an instance of "%s".', HandlerInterface::class));
     }
 }

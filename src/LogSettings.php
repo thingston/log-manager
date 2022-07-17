@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Thingston\Log;
 
-use Monolog\Handler\NullHandler;
-use Monolog\Handler\RotatingFileHandler;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\ErrorLogHandler;
 use Psr\Log\LogLevel;
+use Thingston\Log\Adapter\NullAdapter;
+use Thingston\Log\Adapter\StreamAdapter;
 use Thingston\Settings\AbstractSettings;
 
 final class LogSettings extends AbstractSettings
 {
     public const DEFAULT = 'default';
-    public const HANDLER = 'handler';
+    public const ADAPTER = 'adapter';
     public const ARGUMENTS = 'arguments';
 
     public const LOG_STACK = 'stack';
@@ -30,33 +28,18 @@ final class LogSettings extends AbstractSettings
     {
         parent::__construct(array_merge([
             self::DEFAULT => self::LOG_STACK,
-            self::LOG_STACK => [self::LOG_STREAM, self::LOG_ERROR],
+            self::LOG_STACK => [self::LOG_STREAM],
             self::LOG_NULL => [
-                self::HANDLER => NullHandler::class,
+                self::ADAPTER => NullAdapter::class,
                 self::ARGUMENTS => [
                     'level' => LogLevel::DEBUG,
                 ],
             ],
             self::LOG_STREAM => [
-                self::HANDLER => StreamHandler::class,
+                self::ADAPTER => StreamAdapter::class,
                 self::ARGUMENTS => [
                     'stream' => sys_get_temp_dir() . '/thingston.log',
                     'level' => LogLevel::DEBUG,
-                ],
-            ],
-            self::LOG_ROTATING => [
-                self::HANDLER => RotatingFileHandler::class,
-                self::ARGUMENTS => [
-                    'filename' => sys_get_temp_dir() . '/thingston.log',
-                    'maxFiles' => 7,
-                    'level' => LogLevel::DEBUG,
-                ],
-            ],
-            self::LOG_ERROR => [
-                self::HANDLER => ErrorLogHandler::class,
-                self::ARGUMENTS => [
-                    'messageType' => 0,
-                    'level' => LogLevel::ERROR,
                 ],
             ],
         ], $settings));

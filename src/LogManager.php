@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Thingston\Log;
 
-use Monolog\Handler\HandlerInterface;
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Stringable;
+use Thingston\Log\Adapter\AdapterInterface;
 use Thingston\Log\Exception\InvalidArgumentException;
 use Thingston\Settings\SettingsInterface;
 
@@ -36,13 +35,13 @@ final class LogManager implements LogManagerInterface
             return $this->loggers[$name];
         }
 
-        $handlers = [];
+        $adapters = [];
 
         foreach ($this->resolveConfig($name) as $config) {
-            $handlers[] = $this->createHandler($config);
+            $adapters[] = $this->createAdapter($name, $config);
         }
 
-        return $this->loggers[$name] = new Logger($name, $handlers);
+        return $this->loggers[$name] = new Logger($adapters);
     }
 
     /**
@@ -65,7 +64,7 @@ final class LogManager implements LogManagerInterface
             throw InvalidArgumentException::forInvalidConfigType(gettype($config), $name);
         }
 
-        if (isset($config[LogSettings::HANDLER])) {
+        if (isset($config[LogSettings::ADAPTER])) {
             return [$config];
         }
 
@@ -88,13 +87,14 @@ final class LogManager implements LogManagerInterface
     }
 
     /**
+     * @param string $name
      * @param array<string, mixed> $config
-     * @return HandlerInterface
+     * @return AdapterInterface
      */
-    private function createHandler(array $config): HandlerInterface
+    private function createAdapter(string $name, array $config): AdapterInterface
     {
-        if (false === isset($config[LogSettings::HANDLER])) {
-            throw InvalidArgumentException::forMissingHandlerClass();
+        if (false === isset($config[LogSettings::ADAPTER])) {
+            throw InvalidArgumentException::forMissingAdapterClass();
         }
 
         $arguments = $config[LogSettings::ARGUMENTS] ?? [];
@@ -103,16 +103,16 @@ final class LogManager implements LogManagerInterface
             throw InvalidArgumentException::forInvalidConfigType(gettype($arguments), LogSettings::ARGUMENTS);
         }
 
-        $class = $config[LogSettings::HANDLER];
+        $class = $config[LogSettings::ADAPTER];
 
-        if (false === is_string($class) || false === is_a($class, HandlerInterface::class, true)) {
-            throw InvalidArgumentException::forInvalidHandlerClass();
+        if (false === is_string($class) || false === is_a($class, AdapterInterface::class, true)) {
+            throw InvalidArgumentException::forInvalidAdapterClass();
         }
 
-        /** @var HandlerInterface $handler */
-        $handler = new $class(...$arguments);
+        /** @var AdapterInterface $adapter */
+        $adapter = new $class($name, $arguments);
 
-        return $handler;
+        return $adapter;
     }
 
     public function alert(string|Stringable $message, mixed $context = []): void

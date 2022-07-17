@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Thingston\Tests\Log;
 
-use Monolog\Handler\NullHandler;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Thingston\Log\LogManager;
-use Thingston\Settings\Settings;
+use Thingston\Log\Adapter\NullAdapter;
 use Thingston\Log\Exception\InvalidArgumentException;
+use Thingston\Log\LogManager;
+use Thingston\Log\LogSettings;
+use Thingston\Settings\Settings;
 
 final class LogManagerTest extends TestCase
 {
@@ -33,9 +34,9 @@ final class LogManagerTest extends TestCase
     public function testGetCustomLogger(): void
     {
         $manager = new LogManager(new Settings([
-            'logger1' => ['handler' => NullHandler::class],
-            'logger2' => [['handler' => NullHandler::class], 'logger1'],
-            'logger3' => ['logger2', ['handler' => NullHandler::class], 'logger1'],
+            'logger1' => [LogSettings::ADAPTER => NullAdapter::class],
+            'logger2' => [[LogSettings::ADAPTER => NullAdapter::class], 'logger1'],
+            'logger3' => ['logger2', [LogSettings::ADAPTER => NullAdapter::class], 'logger1'],
         ]));
 
         $this->assertInstanceOf(LoggerInterface::class, $manager->getLogger('logger1'));
@@ -47,7 +48,7 @@ final class LogManagerTest extends TestCase
     public function testInvalidNameLogger(): void
     {
         $manager = new LogManager(new Settings([
-            'logger1' => ['handler' => NullHandler::class],
+            'logger1' => [LogSettings::ADAPTER => NullAdapter::class],
         ]));
 
         $this->expectException(InvalidArgumentException::class);
@@ -74,7 +75,7 @@ final class LogManagerTest extends TestCase
         $manager->getLogger('logger1');
     }
 
-    public function testMissingHandler(): void
+    public function testMissingAdapter(): void
     {
         $manager = new LogManager(new Settings([
             'logger1' => [['foo' => 'bar']],
@@ -87,17 +88,17 @@ final class LogManagerTest extends TestCase
     public function testInvalidArguments(): void
     {
         $manager = new LogManager(new Settings([
-            'logger1' => [['handler' => NullHandler::class, 'arguments' => true]],
+            'logger1' => [[LogSettings::ADAPTER => NullAdapter::class, 'arguments' => true]],
         ]));
 
         $this->expectException(InvalidArgumentException::class);
         $manager->getLogger('logger1');
     }
 
-    public function testInvalidHandler(): void
+    public function testInvalidAdapter(): void
     {
         $manager = new LogManager(new Settings([
-            'logger1' => [['handler' => 'foo']],
+            'logger1' => [[LogSettings::ADAPTER => 'foo']],
         ]));
 
         $this->expectException(InvalidArgumentException::class);
