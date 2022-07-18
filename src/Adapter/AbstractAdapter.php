@@ -8,38 +8,40 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Stringable;
 use Thingston\Log\Exception\InvalidArgumentException;
+use Thingston\Log\LoggerInterfaceTrait;
+use Throwable;
 
 abstract class AbstractAdapter implements AdapterInterface
 {
+    use LoggerInterfaceTrait;
+
     protected ?LoggerInterface $logger = null;
 
     abstract protected function createLogger(): LoggerInterface;
 
     /**
      * @param string $name
-     * @param array<string, mixed> $arguments
      * @param LogLevel::* $level
      * @param bool $shouldBubble
      */
     public function __construct(
         protected string $name,
-        protected array $arguments = [],
         protected string $level = LogLevel::DEBUG,
         protected bool $shouldBubble = true
     ) {
-        $levels = [LogLevel::ALERT, LogLevel::CRITICAL, LogLevel::DEBUG, LogLevel::EMERGENCY,
-            LogLevel::ERROR, LogLevel::INFO, LogLevel::NOTICE, LogLevel::WARNING];
-
-        if (false === in_array($level, $levels)) {
-            throw new InvalidArgumentException('Invalid level argument value.');
-        }
-
-        $this->name = $name;
-        $this->arguments = $arguments;
-        $this->level = $level;
+        $this->name = $this->assertName($name);
+        $this->level = $this->assertLevel($level);
         $this->shouldBubble = $shouldBubble;
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return \Psr\Log\LogLevel::*
+     */
     public function getLevel(): string
     {
         return $this->level;
@@ -61,46 +63,41 @@ abstract class AbstractAdapter implements AdapterInterface
             $this->logger = $this->createLogger();
         }
 
-        $this->logger->log($level, $message, $context);
+        try {
+            $this->logger->log($level, $message, $context);
+        } catch (Throwable $e) {
+            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
-    public function emergency(string|Stringable $message, array $context = []): void
+    /**
+     * @param mixed $name
+     * @return string
+     */
+    protected function assertName($name): string
     {
-        $this->log(LogLevel::EMERGENCY, $message, $context);
+        if (false === is_string($name) || '' === trim($name)) {
+            throw new InvalidArgumentException('Adapter name must be a string and can\'t be empty.');
+        }
+
+        return $name;
     }
 
-    public function alert(string|Stringable $message, array $context = []): void
+    /**
+     * @param mixed $level
+     * @return LogLevel::*
+     */
+    protected function assertLevel($level): string
     {
-        $this->log(LogLevel::ALERT, $message, $context);
-    }
+        $levels = [LogLevel::ALERT, LogLevel::CRITICAL, LogLevel::DEBUG, LogLevel::EMERGENCY,
+            LogLevel::ERROR, LogLevel::INFO, LogLevel::NOTICE, LogLevel::WARNING];
 
-    public function critical(string|Stringable $message, array $context = []): void
-    {
-        $this->log(LogLevel::CRITICAL, $message, $context);
-    }
+        foreach ($levels as $logLevel) {
+            if ($level === $logLevel) {
+                return $level;
+            }
+        }
 
-    public function error(string|Stringable $message, array $context = []): void
-    {
-        $this->log(LogLevel::ERROR, $message, $context);
-    }
-
-    public function warning(string|Stringable $message, array $context = []): void
-    {
-        $this->log(LogLevel::WARNING, $message, $context);
-    }
-
-    public function notice(string|Stringable $message, array $context = []): void
-    {
-        $this->log(LogLevel::NOTICE, $message, $context);
-    }
-
-    public function info(string|Stringable $message, array $context = []): void
-    {
-        $this->log(LogLevel::INFO, $message, $context);
-    }
-
-    public function debug(string|Stringable $message, array $context = []): void
-    {
-        $this->log(LogLevel::DEBUG, $message, $context);
+        throw new InvalidArgumentException('Invalid level argument value.');
     }
 }

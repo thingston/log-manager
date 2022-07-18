@@ -7,29 +7,58 @@ namespace Thingston\Log\Adapter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Thingston\Log\Exception\InvalidArgumentException;
 use Throwable;
 
 final class StreamAdapter extends AbstractAdapter
 {
+    /**
+     * @param resource|string $stream
+     * @param string $name
+     * @param LogLevel::* $level
+     * @param bool $shouldBubble
+     * @param int|null $filePermission
+     * @param bool $useLocking
+     */
+    public function __construct(
+        private $stream,
+        string $name,
+        string $level = LogLevel::DEBUG,
+        bool $shouldBubble = true,
+        private ?int $filePermission = null,
+        private bool $useLocking = false
+    ) {
+        parent::__construct($name, $level, $shouldBubble);
+
+        $this->stream = $this->assertStream($stream);
+        $this->filePermission = $filePermission;
+        $this->useLocking = $useLocking;
+    }
+
+    /**
+     * @param mixed $stream
+     * @return resource|string
+     */
+    private function assertStream($stream)
+    {
+        if (is_resource($stream) || (is_string($stream) && '' !== trim($stream))) {
+            return $stream;
+        }
+
+        throw new InvalidArgumentException('Invalid stream value.');
+    }
+
     protected function createLogger(): LoggerInterface
     {
-        $stream = $this->arguments['stream'] ?? null;
-        $level = $this->level;
-        $bubble = $this->shouldBubble;
-        $filePermission = $this->arguments['filePermission'] ?? null;
-        $useLocking = (bool) ($this->arguments['useLocking'] ?? false);
-
-        if (false === is_resource($stream) && false === is_string($stream)) {
-            throw new InvalidArgumentException('Invalid type for "stream" argument.');
-        }
-
-        if (false === is_int($filePermission) && null !== $filePermission) {
-            throw new InvalidArgumentException('Invalid type for "filePermission" argument.');
-        }
-
         try {
-            $handler = new StreamHandler($stream, $level, $bubble, $filePermission, $useLocking);
+            $handler = new StreamHandler(
+                $this->stream,
+                $this->level,
+                $this->shouldBubble,
+                $this->filePermission,
+                $this->useLocking
+            );
         } catch (Throwable $e) {
             throw new InvalidArgumentException(sprintf(
                 'Unable to create adapter "%s" for logger "%s".',

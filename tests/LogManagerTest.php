@@ -14,6 +14,13 @@ use Thingston\Settings\Settings;
 
 final class LogManagerTest extends TestCase
 {
+    use TestLoggerTrait;
+
+    protected function createLogger(): LoggerInterface
+    {
+        return new LogManager();
+    }
+
     public function testGetDefaultLogger(): void
     {
         $manager = new LogManager();
