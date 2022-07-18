@@ -74,7 +74,7 @@ abstract class AbstractAdapter implements AdapterInterface
      * @param mixed $name
      * @return string
      */
-    protected function assertName($name): string
+    protected static function assertName($name): string
     {
         if (false === is_string($name) || '' === trim($name)) {
             throw new InvalidArgumentException('Adapter name must be a string and can\'t be empty.');
@@ -87,7 +87,7 @@ abstract class AbstractAdapter implements AdapterInterface
      * @param mixed $level
      * @return LogLevel::*
      */
-    protected function assertLevel($level): string
+    protected static function assertLevel($level): string
     {
         $levels = [LogLevel::ALERT, LogLevel::CRITICAL, LogLevel::DEBUG, LogLevel::EMERGENCY,
             LogLevel::ERROR, LogLevel::INFO, LogLevel::NOTICE, LogLevel::WARNING];

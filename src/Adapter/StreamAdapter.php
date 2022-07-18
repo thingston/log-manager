@@ -37,16 +37,45 @@ final class StreamAdapter extends AbstractAdapter
     }
 
     /**
+     * @param array<string, mixed> $arguments
+     * @return AdapterInterface
+     */
+    public static function create(array $arguments): AdapterInterface
+    {
+        return new StreamAdapter(
+            stream: static::assertStream($arguments['stream'] ?? null),
+            name: static::assertName($arguments['name'] ?? null),
+            level: static::assertLevel($arguments['level'] ?? \Psr\Log\LogLevel::DEBUG),
+            shouldBubble: (bool) ($arguments['shouldBubble'] ?? true),
+            useLocking: (bool) ($arguments['useLocking'] ?? false),
+            filePermission: static::assertFilePermission($arguments['filePermission'] ?? null)
+        );
+    }
+
+    /**
      * @param mixed $stream
      * @return resource|string
      */
-    private function assertStream($stream)
+    private static function assertStream($stream)
     {
         if (is_resource($stream) || (is_string($stream) && '' !== trim($stream))) {
             return $stream;
         }
 
-        throw new InvalidArgumentException('Invalid stream value.');
+        throw new InvalidArgumentException('Invalid "stream" value.');
+    }
+
+    /**
+     * @param mixed $filePermission
+     * @return int|null
+     */
+    private static function assertFilePermission($filePermission)
+    {
+        if (is_int($filePermission) || null === $filePermission) {
+            return $filePermission;
+        }
+
+        throw new InvalidArgumentException('Invalid "filePermission" value.');
     }
 
     protected function createLogger(): LoggerInterface

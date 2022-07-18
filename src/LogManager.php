@@ -114,7 +114,7 @@ final class LogManager implements LogManagerInterface
         $arguments['name'] = $name;
 
         /** @var AdapterInterface $adapter */
-        $adapter = new $class(...$arguments);
+        $adapter = $class::create($arguments);
 
         return $adapter;
     }
